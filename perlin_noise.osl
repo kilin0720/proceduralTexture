@@ -1,0 +1,52 @@
+
+float fade(float t) {
+    return t*t*t*(t*(t*6 - 15) + 10);
+}
+
+float lerp(float a, float b, float t) {
+    return a + t * (b - a);
+}
+
+vector grad(point p) {
+    float x = mod(sin(dot(p, vector(127.1, 311.7, 112.23))) * 43758.5453, 1.0);
+    float y = mod(sin(dot(p, vector(269.5, 183.3, 23.344))) * 43758.5453, 1.0);
+    return normalize(vector(x - 0.5, y - 0.5, 0));
+}
+
+
+shader perlin_noise(
+point p = P,
+float grid_size = 0.1,
+output float value = 0
+
+){
+
+// 1.Generate grids and get local coordinates
+point pos = p/grid_size; 
+point i = floor(pos);
+point local_p = pos - i;
+
+// 2. Generate pseudo-random lattice gradients
+vector g_00 = grad(i);
+vector g_10 = grad(i+vector(1,0,0));
+vector g_01 = grad(i+vector(0,1,0));
+vector g_11 = grad(i+vector(1,1,0));
+
+
+// 3.Measure directional influence from lattice gradients
+float d00 = dot(g_00,local_p - point(0,0,0));
+float d10 = dot(g_10,local_p - point(1,0,0));
+float d01 = dot(g_01,local_p - point(0,1,0));
+float d11 = dot(g_11,local_p - point(1,1,0));
+
+
+// 4. Blend corner influences with smooth interpolation
+float u0 = fade(local_p[0]);
+float v0 = fade(local_p[1]);
+
+float x1 = lerp(d00, d10, u0);
+float x2 = lerp(d01, d11, u0);
+
+value = lerp(x1, x2, v0);
+
+}
